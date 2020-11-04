@@ -20,7 +20,7 @@ public class A3 {
         int numOfProcesses = processes.size();
         setAllProcessMaxFrames(totalFrames/numOfProcesses , processes);
 
-        
+
     }
 
     private ArrayList<Process> generateProcessesFromFiles(String[] args) {
