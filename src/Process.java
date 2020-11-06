@@ -1,3 +1,14 @@
+/**
+ *  FileName: Process.java
+ *  Assessment: COMP2240 - A3
+ *  Author: Yosiah de Koeyer
+ *  Student No: c3329520
+ *
+ *  Description:
+ *  Process class used to represent A process trying to execute on a Processor that needs to load its code
+ *  from Virtual Memory into Main Memory with a limited frames.
+ */
+
 import java.util.ArrayList;
 import java.util.Iterator;
 

@@ -1,6 +1,14 @@
+/**
+ *  FileName: Policy.java
+ *  Assessment: COMP2240 - A3
+ *  Author: Yosiah de Koeyer
+ *  Student No: c3329520
+ *
+ *  Description:
+ *  Abstract policy class that is extended by LRU and Clock algo classes
+ */
+
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Queue;
 
 public abstract class Policy {
     private String name;
@@ -12,6 +20,11 @@ public abstract class Policy {
 
     private boolean isClockPolicy;
 
+    /**
+     * Policy class constructor
+     * @param n name of the policy
+     * @param RRQuant the time quantum used for the Round Robin scheduling algo
+     */
     Policy(String n, int RRQuant) {
         this.readyProcesses = new ArrayList<>();
         this.blockedProcesses = new ArrayList<>();
@@ -22,43 +35,51 @@ public abstract class Policy {
         this.isClockPolicy = n.equals("ClockPolicy"); // String equals returns boolean
     }
 
+    /**
+     * getCurrentTime() method
+     * @return an int containing the current time
+     */
     protected int getCurrentTime() {
         return currentTime;
     }
 
+    /**
+     * incCurrentTime() method
+     * @param t an int number of how much to increment the current time by
+     */
     protected void incCurrentTime(int t) {
         this.currentTime += t;
     }
 
-
+    /**
+     * addProcesses() method
+     * @param processes an ArrayList of processes to add to the algo
+     */
     public void addProcesses(ArrayList<Process> processes) {
         for (Process p : processes) {
             readyProcesses.add(p);
         }
     }
 
-    protected void addAllProcessesToCurrent(ArrayList<Process> processes) {
-        for (Process p : processes) {
-            readyProcesses.add(p);
-        }
-    }
-
-    protected void moveProcessToEnd() { // moves job currently at top to the bottom
-        if (readyProcesses.size() > 0) { // avoid errors if list is empty
-            Process temp = this.readyProcesses.get(0);
-            readyProcesses.remove(0);
-            readyProcesses.add(temp); // automatically adds to bottom of list
-        }
-    }
-
+    /**
+     * getName() method
+     * @return a String containing the name of the policy
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * getName method(), sets the name of the policy
+     * @param name String containing the name to set
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Abstract method run(), needs to be implemented in classes that extend policy
+     */
     abstract void run();
 
 }

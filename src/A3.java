@@ -1,8 +1,24 @@
+/**
+ *  FileName: A3.java
+ *  Assessment: COMP2240 - A3
+ *  Author: Yosiah de Koeyer
+ *  Student No: c3329520
+ *
+ *  Description:
+ *  Main class file for A3, accepts parameters from command line args and creates processes and pages from the input
+ */
+
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.io.File;
 
 public class A3 {
+
+    /**
+     * Entry point for A3 class
+     * @param args takes params from cmd args
+     * @return Nothing.
+     */
     public static void main(String[] args) {
         if (args.length <= 3) { // If wrong amount of args given
             System.out.println("Usage: A1 [file]"); // TODO: fix
@@ -12,6 +28,11 @@ public class A3 {
         main.run(args);
     }
 
+    /**
+     * run() method, gets passed args where it then generates processes and parameters from the args. Instantiates
+     * the replacement policies, runs them and prints out the results.
+     * @param args
+     */
     private void run(String[] args) {
         // Not much input sanitation
         int totalFrames = Integer.parseInt(args[0]);
@@ -38,6 +59,10 @@ public class A3 {
 
     }
 
+    /**
+     * generateStats() method, prints the stats of both simulations
+     * @param processes an ArrayLists of processes to extract the stats from
+     */
     private void generateStats(ArrayList<Process> processes) {
         System.out.println("PID  Process Name    Turnaround Time  # Faults  Fault Times");
         for (Process p : processes) {
@@ -47,6 +72,11 @@ public class A3 {
         }
     }
 
+    /**
+     * generateProcessesFromFiles() method
+     * @param args args from the command line input
+     * @return an ArrayList of processes from the given files
+     */
     private ArrayList<Process> generateProcessesFromFiles(String[] args) {
         ArrayList<Process> processList = new ArrayList<>();
         for (int i = 2; i < args.length; i ++) {
@@ -56,6 +86,11 @@ public class A3 {
         return processList;
     }
 
+    /**
+     * generateProcess() method, generates the process from the given file
+     * @param s a String containing the filepath
+     * @return an instance of Process
+     */
     private Process generateProcess(String s) {
         int id;
         ArrayList<Integer> pageRequests = new ArrayList<>();
@@ -76,6 +111,11 @@ public class A3 {
         }
     }
 
+    /**
+     * setAllProcessMaxFrames() method, sets the maxFrames member variable for all processes
+     * @param i the number of max frames
+     * @param processes an ArrayList of processes to set
+     */
     private void setAllProcessMaxFrames(int i, ArrayList<Process> processes) {
         for (Process p : processes) {
             p.setMaxFrames(i);

@@ -1,7 +1,17 @@
+/**
+ *  FileName: Page.java
+ *  Assessment: COMP2240 - A3
+ *  Author: Yosiah de Koeyer
+ *  Student No: c3329520
+ *
+ *  Description:
+ *  Page class used to represent a page stored in Main Memory or Virtual Memory
+ */
+
 public class Page {
-    private int pageID;
-    private int useBit; // needed for clock policy
-    private int lastAccessTime;
+    private int pageID;         // ID of the page
+    private int useBit;         // needed for clock policy
+    private int lastAccessTime; // Needed for LRU policy
 
     Page() {
         this.lastAccessTime = 0;
