@@ -37,6 +37,7 @@ public class Process implements Cloneable {
         this.faults = new ArrayList<>();
         this.finishTime = 0;
         this.arriveTime = 0; // all arrive at same time
+        this.finishTime = 0;
         this.currentRequest = 0;
         this.isReady = true;
         this.state = State.READY;
@@ -49,8 +50,18 @@ public class Process implements Cloneable {
         initializePages(pRequests);
     }
 
-    public void run(int time) { // try to run the process TODO: make this return the state of the process
+    private void initializePages(ArrayList<Integer> pRequests) {
+        for (int i : pRequests) {
+            Page temp = new Page(i);
+            this.pageRequests.add(temp);
+            if (!doesContainPage(pagesInVM, i)) {
+                pagesInVM.add(temp);
+            }
+        }
+    }
 
+    public void run(int time) { // try to run the process TODO: make this return the state of the process
+        this.currentRequest += 1;
     }
 
     public void setState(Process.State s) {
@@ -62,11 +73,14 @@ public class Process implements Cloneable {
     }
 
     public boolean isRequestInMM() { // is request in Main Memory
-        if(doesContainPage(this.pagesInMM, this.pageRequests.get(this.currentRequest).getPageID())) {
-            return true;
-        } else {
-            return false;
+        if (this.currentRequest < this.pageRequests.size()) {
+            if (doesContainPage(this.pagesInMM, this.pageRequests.get(this.currentRequest).getPageID())) {
+                return true;
+            } else {
+                return false;
+            }
         }
+        return false;
     }
 
     public int getSwapInStartTime() {
@@ -82,7 +96,6 @@ public class Process implements Cloneable {
         this.state = State.BLOCKED;
     }
 
-
     public void swapCurrentRequestToMM() {
         int currentID = this.pageRequests.get(this.currentRequest).getPageID();
         if (doesContainPage(this.pagesInVM, currentID)) { // if the page exists in virtual memory
@@ -92,16 +105,6 @@ public class Process implements Cloneable {
                     this.pagesInMM.add(p);
                     i.remove();
                 }
-            }
-        }
-    }
-
-    private void initializePages(ArrayList<Integer> pRequests) {
-        for (int i : pRequests) {
-            Page temp = new Page(i);
-            this.pageRequests.add(temp);
-            if (!doesContainPage(pagesInVM, i)) {
-                pagesInVM.add(temp);
             }
         }
     }
@@ -120,28 +123,12 @@ public class Process implements Cloneable {
         return processID;
     }
 
-    public void setProcessID(int processID) {
-        this.processID = processID;
-    }
-
     public String getProcessName() {
         return processName;
     }
 
-    public void setProcessName(String processName) {
-        this.processName = processName;
-    }
-
-    public int getMaxFrames() {
-        return maxFrames;
-    }
-
     public void setMaxFrames(int maxFrames) {
         this.maxFrames = maxFrames;
-    }
-
-    public int getFinishTime() {
-        return finishTime;
     }
 
     public void setFinishTime(int finishTime) {
@@ -156,11 +143,8 @@ public class Process implements Cloneable {
         this.currentRequest = r;
     }
 
-    public void incrementCurrentRequest(int r) {
-        this.currentRequest += r;
-    }
 
-    public void faultOccured(int time) {
+    public void generateFault(int time) {
         this.faults.add(time);
     }
 
@@ -168,13 +152,22 @@ public class Process implements Cloneable {
         return this.state;
     }
 
-    //
-    //@Override
-    //public Object clone() throws CloneNotSupportedException {
-    //    Process cloned =  (Process)super.clone();
-    //
-    //    return cloned;
-    //}
-    //
+
+    public int getTurnAroundTime() {
+        return this.finishTime - this.arriveTime;
+    }
+
+    public int getNumOfFaults() {
+        return this.faults.size();
+    }
+
+    public String getFaultString() {
+        String s = "{";
+        for (int i : faults) {
+            s += (i + ", ");
+        }
+        s  = s.substring(0, s.length() - 2) + "}";
+        return s;
+    }
 
 }
