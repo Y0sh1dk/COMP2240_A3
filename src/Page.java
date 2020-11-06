@@ -1,9 +1,11 @@
 public class Page {
     private int pageID;
-    private boolean useBit; // needed for clock policy
+    private int useBit; // needed for clock policy
+    private int lastAccessTime;
 
     Page() {
-        useBit = false;
+        this.lastAccessTime = 0;
+        this.useBit = 0;
     }
 
     Page(int pID) {
@@ -20,11 +22,19 @@ public class Page {
         this.pageID = pageID;
     }
 
-    public boolean isUseBit() {
+    public int getUseBit() {
         return useBit;
     }
 
-    public void setUseBit(boolean useBit) {
+    public void setUseBit(int useBit) {
         this.useBit = useBit;
+    }
+
+    public int getLastAccessTime() {
+        return lastAccessTime;
+    }
+
+    public void setLastAccessTime(int lastAccessTime) {
+        this.lastAccessTime = lastAccessTime;
     }
 }

@@ -61,44 +61,4 @@ public abstract class Policy {
 
     abstract void run();
 
-    protected void updateStates() {
-        for (Iterator<Process> i = readyProcesses.iterator(); i.hasNext();) {
-            Process p = i.next();
-            if (p.getCurrentRequest() >= p.numOfRequests()) {
-                System.out.println(p.getProcessID() + ": FINISHED (time=" + getCurrentTime() + ")");
-                p.setState(Process.State.FINISHED);
-                p.setFinishTime(this.getCurrentTime());
-                this.finishedProcesses.add(p);
-                i.remove();
-            } else if (p.isRequestInMM()) {
-                p.setState(Process.State.READY);
-            } else { // if request is not in Main Memory
-                p.generateFault(this.getCurrentTime());
-                p.swapInPageToMM(this.getCurrentTime());
-                p.setState(Process.State.BLOCKED);
-                this.blockedProcesses.add(p);
-                i.remove();
-            } // If it has done all of its pages requests
-        }
-
-        for (Iterator<Process> i = blockedProcesses.iterator(); i.hasNext();) {
-            Process p = i.next();
-            if (p.getCurrentRequest() >= p.numOfRequests()) {
-                System.out.println(p.getProcessID() + ": FINISHED (time=" + getCurrentTime() + ")");
-                p.setState(Process.State.FINISHED);
-                p.setFinishTime(this.getCurrentTime());
-                this.finishedProcesses.add(p);
-                i.remove();
-            } else if (!p.isRequestInMM()) {
-                if (p.getSwapInStartTime() + p.getSWAP_IN_TIME() <= this.getCurrentTime()) { // page ready to be swapped
-                    p.swapCurrentRequestToMM();  // swap the page in!
-                    p.setState(Process.State.READY);
-                    System.out.println(p.getProcessID() + ": READY (time=" + getCurrentTime() + ")");
-                    this.readyProcesses.add(p); // add process to ready queue
-                    i.remove(); // remove it from blocked queue
-                }
-            }
-        }
-    }
-
 }

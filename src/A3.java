@@ -27,14 +27,14 @@ public class A3 {
         LRU.addProcesses(processesLRU);
         LRU.run();
 
-        //ClockPolicy Clock = new ClockPolicy(timeQuantum);
-        //Clock.addProcesses(processesClock);
-        //Clock.run();
+        ClockPolicy Clock = new ClockPolicy(timeQuantum);
+        Clock.addProcesses(processesClock);
+        Clock.run();
 
         System.out.println("LRU - Fixed:");
         generateStats(processesLRU);
-        //System.out.println("LRU - Fixed:");
-        //generateStats(processesClock);
+        System.out.println("Clock - Fixed:");
+        generateStats(processesClock);
 
     }
 

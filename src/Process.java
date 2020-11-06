@@ -61,6 +61,12 @@ public class Process implements Cloneable {
     }
 
     public void run(int time) { // try to run the process TODO: make this return the state of the process
+        for (Page p : pagesInMM) {
+            if (p.getPageID() == this.pageRequests.get(this.currentRequest).getPageID()) { // It should always be there
+                p.setLastAccessTime(time); // TODO: test this
+                p.setUseBit(1);
+            }
+        }
         this.currentRequest += 1;
     }
 
@@ -96,6 +102,14 @@ public class Process implements Cloneable {
         this.state = State.BLOCKED;
     }
 
+    public int getNumOfPagesInMM() {
+        return pagesInMM.size();
+    }
+
+    public int getMaxFrames() {
+        return  this.maxFrames;
+    }
+
     public void swapCurrentRequestToMM() {
         int currentID = this.pageRequests.get(this.currentRequest).getPageID();
         if (doesContainPage(this.pagesInVM, currentID)) { // if the page exists in virtual memory
@@ -116,6 +130,35 @@ public class Process implements Cloneable {
             }
         }
         return false;
+    }
+
+    public void removeLastUsedPageFromMM() {
+        int lastUsedPageTime = 10000; // TODO: bad dont like this
+        for (Page p : pagesInMM) { // find the page last accessed
+            if (p.getLastAccessTime() < lastUsedPageTime) {
+                lastUsedPageTime = p.getLastAccessTime();
+            }
+        }
+        for (Iterator<Page> i = pagesInMM.iterator(); i.hasNext();) {  // remove it
+            Page p = i.next();
+            if (p.getLastAccessTime() == lastUsedPageTime) {
+                i.remove();
+                break;
+            }
+        }
+    }
+
+    public void clockRemovePage() {
+        boolean removed = false;
+        while(!removed) {
+            Page temp = this.pagesInMM.remove(0);
+            if (temp.getUseBit() == 1) {
+                temp.setUseBit(0);
+                this.pagesInMM.add(temp);
+            } else {
+                removed = true;
+            }
+        }
     }
 
 
