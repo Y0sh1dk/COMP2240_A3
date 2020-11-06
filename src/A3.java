@@ -20,6 +20,9 @@ public class A3 {
         int numOfProcesses = processes.size();
         setAllProcessMaxFrames(totalFrames/numOfProcesses , processes);
 
+        LRUPolicy LRU = new LRUPolicy(timeQuantum);
+        LRU.addProcesses(processes);
+        LRU.run();
 
     }
 

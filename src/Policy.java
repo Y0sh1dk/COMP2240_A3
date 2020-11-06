@@ -1,10 +1,25 @@
 import java.util.ArrayList;
+import java.util.Queue;
 
 public abstract class Policy {
     private String name;
-    protected ArrayList<Process> allProcesses;
+    protected ArrayList<Process> readyProcesses;
+    protected ArrayList<Process> blockedProcesses;
     protected ArrayList<Process> finishedProcesses;
     private int currentTime;
+    protected int RRQuant;
+
+    private boolean isClockPolicy;
+
+    Policy(String n, int RRQuant) {
+        this.readyProcesses = new ArrayList<>();
+        this.blockedProcesses = new ArrayList<>();
+        this.finishedProcesses = new ArrayList<>();
+        this.name = n;
+        this.RRQuant = RRQuant;
+        this.currentTime = 0;
+        this.isClockPolicy = n.equals("ClockPolicy"); // String equals returns boolean
+    }
 
 
     protected int getCurrentTime() {
@@ -19,14 +34,35 @@ public abstract class Policy {
         this.currentTime += t;
     }
 
-    //    Move jobs that have finished executing from currentJobs to finished Jobs
-    protected void checkFinished() {
-        for (Process p : allProcesses) {
-            if (p.getFinishTime() != 0) {
-                finishedProcesses.add(p);
-            }
+
+    public void addProcesses(ArrayList<Process> processes) {
+        for (Process p : processes) {
+            readyProcesses.add(p);
         }
-        allProcesses.removeIf(p -> p.getFinishTime() != 0); // remove process if it has finished
     }
-    
+
+    protected void addAllProcessesToCurrent(ArrayList<Process> processes) {
+        for (Process p : processes) {
+            readyProcesses.add(p);
+        }
+    }
+
+    protected void moveProcessToEnd() { // moves job currently at top to the bottom
+        if (readyProcesses.size() > 0) { // avoid errors if list is empty
+            Process temp = this.readyProcesses.get(0);
+            readyProcesses.remove(0);
+            readyProcesses.add(temp); // automatically adds to bottom of list
+        }
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    abstract void run();
+
 }
