@@ -20,53 +20,46 @@ public class Process implements Cloneable {
     }
 
     private final int MAX_PAGES = 50;
-    private final int SWAP_IN_TIME = 6;
+    private final int SWAP_IN_TIME = 6;     // Time it takes to swap in a page to MM from VM
 
-    private int processID;
-    private int maxFrames;
-    private String processName;
-    private int arriveTime;
-    private int finishTime;
-
-    private int currentRequest;
-    private boolean isReady;
-
-    private int turnaroundTime; // arrive time - finish time
-    private ArrayList<Page> pageRequests;
-    private ArrayList<Page> pagesInVM; // Pages in virtual memory
-    private ArrayList<Page> pagesInMM; // Pages in main memory
-    private ArrayList<Integer> faults; // page faults that have occurred with this process
-
-    private int swapInStartTime;
-
-    private State state;
+    private int processID;                  // ID of the process
+    private int maxFrames;                  // Maximum number of frames allocated to the process
+    private String processName;             // Name of the process
+    private int arriveTime;                 // Arrival time of the process
+    private int finishTime;                 // Finish time of the process
+    private int currentRequest;             // counter representing the current page request
+    private ArrayList<Page> pageRequests;   // list of all requests
+    private ArrayList<Page> pagesInVM;      // Pages in virtual memory
+    private ArrayList<Page> pagesInMM;      // Pages in main memory
+    private ArrayList<Integer> faults;      // page faults that have occurred with this process
+    private int swapInStartTime;            // start time of the last occurred swap
+    private State state;                    // current state of the process
 
     Process() {
-        this.pageRequests = new ArrayList<>();
-        this.pagesInVM = new ArrayList<>();
-        this.pagesInMM = new ArrayList<>();
-        this.faults = new ArrayList<>();
-        this.finishTime = 0;
-        this.arriveTime = 0; // all arrive at same time
-        this.finishTime = 0;
-        this.currentRequest = 0;
-        this.isReady = true;
-        this.state = State.READY;
+        this.pageRequests = new ArrayList<>();  // Initialize arrayList
+        this.pagesInVM = new ArrayList<>();     // Initialize arrayList
+        this.pagesInMM = new ArrayList<>();     // Initialize arrayList
+        this.faults = new ArrayList<>();        // Initialize arrayList
+        this.finishTime = 0;                    // Initialize finish time
+        this.arriveTime = 0;                    // all arrive at same time
+        this.finishTime = 0;                    // Initialize finish time
+        this.currentRequest = 0;                // Initialize current request counter
+        this.state = State.READY;               // Process starts in ready state
     }
 
     Process(int pID, String pName, ArrayList<Integer> pRequests) {
         this();
-        this.processID = pID;
-        this.processName = pName;
-        initializePages(pRequests);
+        this.processID = pID;           // set process ID
+        this.processName = pName;       // set process name
+        initializePages(pRequests);     // creates pages in VM from given requests
     }
 
     private void initializePages(ArrayList<Integer> pRequests) {
         for (int i : pRequests) {
             Page temp = new Page(i);
             this.pageRequests.add(temp);
-            if (!doesContainPage(pagesInVM, i)) {
-                pagesInVM.add(temp);
+            if (!doesContainPage(pagesInVM, i)) {   // If page not in VM
+                pagesInVM.add(temp);                // add it to VM
             }
         }
     }
@@ -90,7 +83,7 @@ public class Process implements Cloneable {
     }
 
     public boolean isRequestInMM() { // is request in Main Memory
-        if (this.currentRequest < this.pageRequests.size()) {
+        if (this.currentRequest < this.pageRequests.size()) { // prevent out of bounds
             if (doesContainPage(this.pagesInMM, this.pageRequests.get(this.currentRequest).getPageID())) {
                 return true;
             } else {
@@ -122,13 +115,13 @@ public class Process implements Cloneable {
     }
 
     public void swapCurrentRequestToMM() {
-        int currentID = this.pageRequests.get(this.currentRequest).getPageID();
-        if (doesContainPage(this.pagesInVM, currentID)) { // if the page exists in virtual memory
-            for (Iterator<Page> i = pagesInVM.iterator(); i.hasNext();) { // find page in VM
+        int currentID = this.pageRequests.get(this.currentRequest).getPageID();     // get ID of current request
+        if (doesContainPage(this.pagesInVM, currentID)) {                           // if the page exists in virtual memory
+            for (Iterator<Page> i = pagesInVM.iterator(); i.hasNext();) {           // find page in VM
                 Page p = i.next();
-                if (p.getPageID() == currentID) { // when find page, add it to MM and delete from VM
+                if (p.getPageID() == currentID) {                                   // when find page, add it to MM
                     this.pagesInMM.add(p);
-                    i.remove();
+                    i.remove();                                                     // delete from VM
                 }
             }
         }
@@ -145,12 +138,14 @@ public class Process implements Cloneable {
 
     public void removeLastUsedPageFromMM() {
         int lastUsedPageTime = 10000; // TODO: bad dont like this
+        // Have to iterate over all before able to remove
         for (Page p : pagesInMM) { // find the page last accessed
             if (p.getLastAccessTime() < lastUsedPageTime) {
                 lastUsedPageTime = p.getLastAccessTime();
             }
         }
-        for (Iterator<Page> i = pagesInMM.iterator(); i.hasNext();) {  // remove it
+        // find and remove it
+        for (Iterator<Page> i = pagesInMM.iterator(); i.hasNext();) {
             Page p = i.next();
             if (p.getLastAccessTime() == lastUsedPageTime) {
                 i.remove();
