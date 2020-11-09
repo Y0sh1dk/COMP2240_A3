@@ -10,6 +10,7 @@
  */
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 
 public class Process implements Cloneable {
@@ -40,6 +41,9 @@ public class Process implements Cloneable {
     private ArrayList<Page> pageRequests;   // list of all requests
     private ArrayList<Page> pagesInVM;      // Pages in virtual memory
     private ArrayList<Page> pagesInMM;      // Pages in main memory
+
+    private Page[] mainMemory;
+
     private ArrayList<Integer> faults;      // page faults that have occurred with this process
     private int swapInStartTime;            // start time of the last occurred swap
     private State state;                    // current state of the process
@@ -75,10 +79,19 @@ public class Process implements Cloneable {
     }
 
     public void run(int time) { // try to run the process TODO: make this return the state of the process
-        for (Page p : pagesInMM) {
-            if (p.getPageID() == this.pageRequests.get(this.currentRequest).getPageID()) { // It should always be there
-                p.setLastAccessTime(time); // TODO: test this
-                p.setUseBit(1);
+        //for (Page p : pagesInMM) {
+        //    if (p.getPageID() == this.pageRequests.get(this.currentRequest).getPageID()) { // It should always be there
+        //        p.setLastAccessTime(time); // TODO: test this
+        //        p.setUseBit(1);
+        //    }
+        //}
+        for (int i = 0; i < mainMemory.length; i++) {
+            if (mainMemory[i] != null) {
+                if (mainMemory[i].getPageID() == this.pageRequests.get(this.currentRequest).getPageID()) {
+                    mainMemory[i].setLastAccessTime(time);
+                    mainMemory[i].setUseBit(1);
+                    break;
+                }
             }
         }
         this.currentRequest += 1;
@@ -94,11 +107,14 @@ public class Process implements Cloneable {
 
     public boolean isRequestInMM() { // is request in Main Memory
         if (this.currentRequest < this.pageRequests.size()) { // prevent out of bounds
-            if (doesContainPage(this.pagesInMM, this.pageRequests.get(this.currentRequest).getPageID())) {
-                return true;
-            } else {
-                return false;
+            for (int i = 0; i < mainMemory.length; i++) {
+                if (mainMemory[i] != null) {
+                    if (mainMemory[i].getPageID() == this.pageRequests.get(this.currentRequest).getPageID()) {
+                        return true;
+                    }
+                }
             }
+            return false;
         }
         return false;
     }
@@ -117,7 +133,13 @@ public class Process implements Cloneable {
     }
 
     public int getNumOfPagesInMM() {
-        return pagesInMM.size();
+        int pages = 0;
+        for (int i = 0; i < mainMemory.length; i++) {
+            if (mainMemory[i] != null) { // if there is a page here
+                pages++;
+            }
+        }
+        return pages;
     }
 
     public int getMaxFrames() {
@@ -130,9 +152,18 @@ public class Process implements Cloneable {
             for (Iterator<Page> i = pagesInVM.iterator(); i.hasNext();) {           // find page in VM
                 Page p = i.next();
                 if (p.getPageID() == currentID) {                                   // when find page, add it to MM
-                    this.pagesInMM.add(p);
+                    addPageToMM(p);
                     i.remove();                                                     // delete from VM
                 }
+            }
+        }
+    }
+
+    private void addPageToMM(Page p) {
+        for (int i = 0; i < mainMemory.length; i++) {
+            if (mainMemory[i] == null) {
+                mainMemory[i] = p;
+                break;
             }
         }
     }
@@ -165,31 +196,36 @@ public class Process implements Cloneable {
         }
     }
 
+    private int clockPointer = 0;
     public void clockRemovePage() {
-        boolean removed = false;
-        //this.pagesInMM.add(0, this.pagesInMM.remove(this.pagesInMM.size()-1));
-        while(!removed) {
-            Page temp = this.pagesInMM.remove(0);
-            if (temp.getUseBit() == 1) {
-                temp.setUseBit(0);
-                this.pagesInMM.add(temp);
-            } else {
-                removed = true;
-            }
-        }
         //boolean removed = false;
-        //Page pageToRemove = null;
-        //while (!removed) {
-        //    for (Page p : pagesInMM) {
-        //        if (p.getUseBit() == 0) {
-        //            pageToRemove = p;
-        //            removed = true;
-        //            break;
-        //        }
-        //        p.setUseBit(0);
+        ////this.pagesInMM.add(0, this.pagesInMM.remove(this.pagesInMM.size()-1));
+        //while(!removed) {
+        //    Page temp = this.pagesInMM.remove(0);
+        //    if (temp.getUseBit() == 1) {
+        //        temp.setUseBit(0);
+        //        this.pagesInMM.add(temp);
+        //    } else {
+        //        removed = true;
         //    }
         //}
-        //this.pagesInMM.remove(pageToRemove);
+        boolean removed = false;
+
+        while(!removed) {
+            if (clockPointer == mainMemory.length) {
+                clockPointer = 0;
+            }
+            if (mainMemory[clockPointer] != null) {
+                if (mainMemory[clockPointer].getUseBit() == 1) {
+                    mainMemory[clockPointer].setUseBit(0);
+                } else { // bit is 0
+                    mainMemory[clockPointer] = null;
+                    removed = true;
+                    break;
+                }
+            }
+            clockPointer++;
+        }
     }
 
 
@@ -203,6 +239,8 @@ public class Process implements Cloneable {
 
     public void setMaxFrames(int maxFrames) {
         this.maxFrames = maxFrames;
+        this.mainMemory = new Page[maxFrames];
+        Arrays.fill(mainMemory, null);
     }
 
     public void setFinishTime(int finishTime) {

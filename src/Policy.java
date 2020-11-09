@@ -18,7 +18,6 @@ public abstract class Policy {
     private int currentTime;
     protected int RRQuant;
 
-    private boolean isClockPolicy;
 
     /**
      * Policy class constructor
@@ -32,7 +31,6 @@ public abstract class Policy {
         this.name = n;
         this.RRQuant = RRQuant;
         this.currentTime = 0;
-        this.isClockPolicy = n.equals("ClockPolicy"); // String equals returns boolean
     }
 
     /**

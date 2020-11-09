@@ -78,8 +78,7 @@ public class LRUPolicy extends Policy {
                 p.setState(Process.State.READY); // set state
             } else { // if request is not in Main Memory
                 System.out.println(p.getProcessID() + ": BLOCKED (time=" + getCurrentTime() + ")");
-                if (p.getNumOfPagesInMM() >= p.getMaxFrames() || p.isFull()) { // If the process has run out of frames
-                    p.setFull(true);
+                if (p.getNumOfPagesInMM() >= p.getMaxFrames()) { // If the process has run out of frames
                     p.removeLastUsedPageFromMM(); // remove last used page from MM
                 }
                 p.generateFault(this.getCurrentTime()); // generate a page fault
