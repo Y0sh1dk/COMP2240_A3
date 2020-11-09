@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -14,8 +15,8 @@ import java.util.Iterator;
 
 
 public class LRUPolicy extends Policy {
-    LRUPolicy(int RRQuant, int maxFrames) {
-        super("LRUPolicy", RRQuant, maxFrames);
+    LRUPolicy(int RRQuant, int maxFrames, ArrayList<Process> processes) {
+        super("LRUPolicy", RRQuant, maxFrames, processes);
     }
 
     /**
@@ -27,9 +28,7 @@ public class LRUPolicy extends Policy {
     @Override
     void run() {
         System.out.println("Initialising " + this.getName() + " Algorithm...");
-
         this.initializeMemory();
-
         Process runningProcess = null;
         int processStartTime = 0;
         boolean quantFinished = false;
@@ -65,15 +64,19 @@ public class LRUPolicy extends Policy {
         System.out.println("test");
     }
 
-    private void setPageAccessTime(int processID, int pageID, int time) {
+    @Override
+    protected void removePage(int processID) {
+        int lastUsed = 100000;
+        int lastUsedIndex = 0;
         for (int i = 0; i < mainMemory[processID-1].length; i++) {
             if (mainMemory[processID-1][i] != null) {
-                if (mainMemory[processID-1][i].getPageID() == pageID) {
-                    mainMemory[processID-1][i].setLastAccessTime(time);
-                    break;
+                if (mainMemory[processID-1][i].getLastAccessTime() < lastUsed) {
+                    lastUsed = mainMemory[processID-1][i].getLastAccessTime();
+                    lastUsedIndex = i;
                 }
             }
         }
+        mainMemory[processID-1][lastUsedIndex] = null; // remove the page
     }
 
     private void updateStates() {
@@ -120,67 +123,6 @@ public class LRUPolicy extends Policy {
                 }
             }
         }
-    }
-
-    private void addPage(int processID, int pageID) {
-        if(mainMemory[processID-1] == null) {
-            mainMemory[processID-1][0] = new Page(pageID);
-            return;
-        }
-        for (int i = 0; i < mainMemory[processID-1].length; i++) {
-            if (mainMemory[processID-1][i] == null) {
-                mainMemory[processID-1][i] = new Page(pageID);
-                break;
-            }
-        }
-    }
-
-    private void removePage(int processID) {
-        int lastUsed = 100000;
-        int lastUsedIndex = 0;
-        for (int i = 0; i < mainMemory[processID-1].length; i++) {
-            if (mainMemory[processID-1][i] != null) {
-                if (mainMemory[processID-1][i].getLastAccessTime() < lastUsed) {
-                    lastUsed = mainMemory[processID-1][i].getLastAccessTime();
-                    lastUsedIndex = i;
-                }
-            }
-        }
-        mainMemory[processID-1][lastUsedIndex] = null; // remove the page
-    }
-
-    private int getNumOfPagesInMemory(int processID) {
-        if (mainMemory[processID-1] == null) {
-            return 0;
-        }
-        int pages = 0;
-        for (int i = 0; i < mainMemory[processID-1].length; i++) {
-            if (mainMemory[processID-1][i] != null) {
-                pages++;
-            }
-        }
-        return pages;
-    }
-
-    private boolean isPageInMemory(int processID, int pageID) {
-        if (mainMemory[processID-1] == null) {
-            return false;
-        }
-        for (int i = 0; i < mainMemory[processID-1].length; i++) {
-            if (mainMemory[processID-1][i] != null) {
-                if (mainMemory[processID-1][i].getPageID() == pageID) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-
-
-    private void initializeMemory() {
-        this.mainMemory = new Page[this.readyProcesses.size()][this.maxFramesPerProcess];
-        //Arrays.fill(mainMemory, null);
     }
 
 }

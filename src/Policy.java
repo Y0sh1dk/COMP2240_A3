@@ -26,7 +26,7 @@ public abstract class Policy {
      * @param n name of the policy
      * @param RRQuant the time quantum used for the Round Robin scheduling algo
      */
-    Policy(String n, int RRQuant, int maxFrames) {
+    Policy(String n, int RRQuant, int maxFrames, ArrayList<Process> processes) {
         this.readyProcesses = new ArrayList<>();
         this.blockedProcesses = new ArrayList<>();
         this.finishedProcesses = new ArrayList<>();
@@ -34,6 +34,7 @@ public abstract class Policy {
         this.RRQuant = RRQuant;
         this.currentTime = 0;
         this.maxFramesPerProcess = maxFrames;
+        this.addProcesses(processes);
     }
 
 
@@ -58,7 +59,7 @@ public abstract class Policy {
      * addProcesses() method
      * @param processes an ArrayList of processes to add to the algo
      */
-    public void addProcesses(ArrayList<Process> processes) {
+    private void addProcesses(ArrayList<Process> processes) {
         for (Process p : processes) {
             readyProcesses.add(p);
         }
@@ -84,5 +85,63 @@ public abstract class Policy {
      * Abstract method run(), needs to be implemented in classes that extend policy
      */
     abstract void run();
+
+    protected boolean isPageInMemory(int processID, int pageID) {
+        if (mainMemory[processID-1] == null) {
+            return false;
+        }
+        for (int i = 0; i < mainMemory[processID-1].length; i++) {
+            if (mainMemory[processID-1][i] != null) {
+                if (mainMemory[processID-1][i].getPageID() == pageID) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    protected int getNumOfPagesInMemory(int processID) {
+        if (mainMemory[processID-1] == null) {
+            return 0;
+        }
+        int pages = 0;
+        for (int i = 0; i < mainMemory[processID-1].length; i++) {
+            if (mainMemory[processID-1][i] != null) {
+                pages++;
+            }
+        }
+        return pages;
+    }
+
+    abstract void removePage(int processID);
+
+
+    protected void addPage(int processID, int pageID) {
+        if(mainMemory[processID-1] == null) {
+            mainMemory[processID-1][0] = new Page(pageID);
+            return;
+        }
+        for (int i = 0; i < mainMemory[processID-1].length; i++) {
+            if (mainMemory[processID-1][i] == null) {
+                mainMemory[processID-1][i] = new Page(pageID);
+                break;
+            }
+        }
+    }
+
+    protected void setPageAccessTime(int processID, int pageID, int time) {
+        for (int i = 0; i < mainMemory[processID-1].length; i++) {
+            if (mainMemory[processID-1][i] != null) {
+                if (mainMemory[processID-1][i].getPageID() == pageID) {
+                    mainMemory[processID-1][i].setLastAccessTime(time);
+                    break;
+                }
+            }
+        }
+    }
+
+    protected void initializeMemory() {
+        this.mainMemory = new Page[this.readyProcesses.size()][this.maxFramesPerProcess];
+    }
 
 }

@@ -43,18 +43,16 @@ public class A3 {
         int numOfProcesses = processesLRU.size();
         int maxFrames = totalFrames/numOfProcesses;
 
-        LRUPolicy LRU = new LRUPolicy(timeQuantum, maxFrames);
-        LRU.addProcesses(processesLRU);
+        LRUPolicy LRU = new LRUPolicy(timeQuantum, maxFrames, processesLRU);
         LRU.run();
 
-        //ClockPolicy Clock = new ClockPolicy(timeQuantum);
-        //Clock.addProcesses(processesClock);
-        //Clock.run();
-        ////
+        ClockPolicy Clock = new ClockPolicy(timeQuantum, maxFrames, processesClock);
+        Clock.run();
+        //
         System.out.println("LRU - Fixed:");
         generateStats(processesLRU);
-        //System.out.println("Clock - Fixed:");
-        //generateStats(processesClock);
+        System.out.println("Clock - Fixed:");
+        generateStats(processesClock);
 
     }
 
