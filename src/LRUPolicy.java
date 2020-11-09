@@ -50,7 +50,9 @@ public class LRUPolicy extends Policy {
                     processStartTime = getCurrentTime();
                 }
                 runningProcess = readyProcesses.get(0); // get the process of the top
+                setPageAccessTime(runningProcess.getProcessID(), runningProcess.getCurrentPageID(), this.getCurrentTime());
                 runningProcess.run(this.getCurrentTime());
+
 
                 if (processStartTime + this.RRQuant - 1 <= this.getCurrentTime()) { // time quant is up
                     quantFinished = true;
@@ -58,6 +60,18 @@ public class LRUPolicy extends Policy {
                 incCurrentTime(1); // increment time by 1
             } else {
                 incCurrentTime(1); // increment time by 1
+            }
+        }
+        System.out.println("test");
+    }
+
+    private void setPageAccessTime(int processID, int pageID, int time) {
+        for (int i = 0; i < mainMemory[processID-1].length; i++) {
+            if (mainMemory[processID-1][i] != null) {
+                if (mainMemory[processID-1][i].getPageID() == pageID) {
+                    mainMemory[processID-1][i].setLastAccessTime(time);
+                    break;
+                }
             }
         }
     }
