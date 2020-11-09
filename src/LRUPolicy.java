@@ -1,3 +1,6 @@
+import java.util.Arrays;
+import java.util.Iterator;
+
 /**
  *  FileName: LRUPolicy.java
  *  Assessment: COMP2240 - A3
@@ -8,12 +11,11 @@
  *  Extends Policy class and implements LRU strategy
  */
 
-import java.util.Iterator;
 
 
 public class LRUPolicy extends Policy {
-    LRUPolicy(int RRQuant) {
-        super("LRUPolicy", RRQuant);
+    LRUPolicy(int RRQuant, int maxFrames) {
+        super("LRUPolicy", RRQuant, maxFrames);
     }
 
     /**
@@ -25,16 +27,18 @@ public class LRUPolicy extends Policy {
     @Override
     void run() {
         System.out.println("Initialising " + this.getName() + " Algorithm...");
+
+        this.initializeMemory();
+
         Process runningProcess = null;
         int processStartTime = 0;
         boolean quantFinished = false;
 
-        updateStates();
         while (this.readyProcesses.size() + this.blockedProcesses.size() > 0) { // while not all processes have finished
             if (quantFinished) {
                 try {
                     this.readyProcesses.add(this.readyProcesses.remove(0));
-                    //this.updateStates();
+
                 } catch (Exception e) {
 
                 }
@@ -56,17 +60,10 @@ public class LRUPolicy extends Policy {
                 incCurrentTime(1); // increment time by 1
             }
         }
-        System.out.println("test");
     }
 
-
-    /**
-     * updateStates() method
-     * Is called from inside the main run() method of the policy. It updates the states of all the processes based on
-     * what is avaiable in the processes Main Memory, as well as its finished page requests
-     */
     private void updateStates() {
-        for (Iterator<Process> i = readyProcesses.iterator(); i.hasNext();) { // iterates through all ready processes
+        for (Iterator<Process> i = readyProcesses.iterator(); i.hasNext();) {
             Process p = i.next();
             if (p.getCurrentRequest() >= p.numOfRequests()) { // if the process has finished
                 System.out.println(p.getProcessID() + ": FINISHED (time=" + getCurrentTime() + ")");
@@ -74,21 +71,24 @@ public class LRUPolicy extends Policy {
                 p.setFinishTime(this.getCurrentTime()); // set its finish time
                 this.finishedProcesses.add(p); // add it too the finished queue
                 i.remove(); // remove from the ready queue
-            } else if (p.isRequestInMM()) { // if the current request is stored in Main Memory
-                p.setState(Process.State.READY); // set state
-            } else { // if request is not in Main Memory
+                continue;
+            }
+            if (this.isPageInMemory(p.getProcessID(),p.getCurrentPageID())) { // page is in memory
+                // Do nothing?
+            } else { // page is not in memory
                 System.out.println(p.getProcessID() + ": BLOCKED (time=" + getCurrentTime() + ")");
-                if (p.getNumOfPagesInMM() >= p.getMaxFrames()) { // If the process has run out of frames
-                    p.removeLastUsedPageFromMM(); // remove last used page from MM
+                if (this.getNumOfPagesInMemory(p.getProcessID()) == maxFramesPerProcess) {
+                    this.removePage(p.getProcessID());
                 }
-                p.generateFault(this.getCurrentTime()); // generate a page fault
-                p.swapInPageToMM(this.getCurrentTime()); // swap page from VM to MM
+                p.generateFault(this.getCurrentTime());
                 p.setState(Process.State.BLOCKED); // set state
+                p.setSwapInStartTime(this.getCurrentTime());
                 this.blockedProcesses.add(p); // add process to blocked queue
                 i.remove(); // remove from ready queue
             }
         }
-        for (Iterator<Process> i = blockedProcesses.iterator(); i.hasNext();) { // iterates through all blocked processes
+
+        for (Iterator<Process> i = blockedProcesses.iterator(); i.hasNext();) {
             Process p = i.next();
             if (p.getCurrentRequest() >= p.numOfRequests()) { // if the process has finished
                 System.out.println(p.getProcessID() + ": FINISHED (time=" + getCurrentTime() + ")");
@@ -96,16 +96,77 @@ public class LRUPolicy extends Policy {
                 p.setFinishTime(this.getCurrentTime()); // set its finish time
                 this.finishedProcesses.add(p); // add it too the finished queue
                 i.remove(); // remove from the ready queue
-            } else if (!p.isRequestInMM()) {
-                if (p.getSwapInStartTime() + p.getSWAP_IN_TIME() <= this.getCurrentTime()) { // page ready to be swapped
-                    p.swapCurrentRequestToMM();  // swap the page in!
+            } else if (!isPageInMemory(p.getProcessID(), p.getCurrentPageID())) { // page not in memory
+                if (p.getSwapInStartTime() + p.getSWAP_IN_TIME() <= this.getCurrentTime()) {
                     p.setState(Process.State.READY);
+                    addPage(p.getProcessID(), p.getCurrentPageID());
                     System.out.println(p.getProcessID() + ": READY (time=" + getCurrentTime() + ")");
                     this.readyProcesses.add(p); // add process to ready queue
                     i.remove(); // remove it from blocked queue
                 }
             }
         }
+    }
+
+    private void addPage(int processID, int pageID) {
+        if(mainMemory[processID-1] == null) {
+            mainMemory[processID-1][0] = new Page(pageID);
+            return;
+        }
+        for (int i = 0; i < mainMemory[processID-1].length; i++) {
+            if (mainMemory[processID-1][i] == null) {
+                mainMemory[processID-1][i] = new Page(pageID);
+                break;
+            }
+        }
+    }
+
+    private void removePage(int processID) {
+        int lastUsed = 100000;
+        int lastUsedIndex = 0;
+        for (int i = 0; i < mainMemory[processID-1].length; i++) {
+            if (mainMemory[processID-1][i] != null) {
+                if (mainMemory[processID-1][i].getLastAccessTime() < lastUsed) {
+                    lastUsed = mainMemory[processID-1][i].getLastAccessTime();
+                    lastUsedIndex = i;
+                }
+            }
+        }
+        mainMemory[processID-1][lastUsedIndex] = null; // remove the page
+    }
+
+    private int getNumOfPagesInMemory(int processID) {
+        if (mainMemory[processID-1] == null) {
+            return 0;
+        }
+        int pages = 0;
+        for (int i = 0; i < mainMemory[processID-1].length; i++) {
+            if (mainMemory[processID-1][i] != null) {
+                pages++;
+            }
+        }
+        return pages;
+    }
+
+    private boolean isPageInMemory(int processID, int pageID) {
+        if (mainMemory[processID-1] == null) {
+            return false;
+        }
+        for (int i = 0; i < mainMemory[processID-1].length; i++) {
+            if (mainMemory[processID-1][i] != null) {
+                if (mainMemory[processID-1][i].getPageID() == pageID) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
+
+    private void initializeMemory() {
+        this.mainMemory = new Page[this.readyProcesses.size()][this.maxFramesPerProcess];
+        //Arrays.fill(mainMemory, null);
     }
 
 }

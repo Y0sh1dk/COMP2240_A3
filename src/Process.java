@@ -10,18 +10,8 @@
  */
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
 
 public class Process implements Cloneable {
-    public boolean isFull() {
-        return isFull;
-    }
-
-    public void setFull(boolean full) {
-        isFull = full;
-    }
-
     enum State {
         BLOCKED,
         READY,
@@ -30,19 +20,14 @@ public class Process implements Cloneable {
 
     private final int MAX_PAGES = 50;
     private final int SWAP_IN_TIME = 6;     // Time it takes to swap in a page to MM from VM
-    private boolean isFull;
 
     private int processID;                  // ID of the process
-    private int maxFrames;                  // Maximum number of frames allocated to the process
     private String processName;             // Name of the process
     private int arriveTime;                 // Arrival time of the process
     private int finishTime;                 // Finish time of the process
     private int currentRequest;             // counter representing the current page request
-    private ArrayList<Page> pageRequests;   // list of all requests
-    private ArrayList<Page> pagesInVM;      // Pages in virtual memory
-    private ArrayList<Page> pagesInMM;      // Pages in main memory
+    private ArrayList<Integer> pageRequests;   // list of all requests
 
-    private Page[] mainMemory;
 
     private ArrayList<Integer> faults;      // page faults that have occurred with this process
     private int swapInStartTime;            // start time of the last occurred swap
@@ -50,50 +35,23 @@ public class Process implements Cloneable {
 
     Process() {
         this.pageRequests = new ArrayList<>();  // Initialize arrayList
-        this.pagesInVM = new ArrayList<>();     // Initialize arrayList
-        this.pagesInMM = new ArrayList<>();     // Initialize arrayList
         this.faults = new ArrayList<>();        // Initialize arrayList
         this.finishTime = 0;                    // Initialize finish time
         this.arriveTime = 0;                    // all arrive at same time
         this.finishTime = 0;                    // Initialize finish time
         this.currentRequest = 0;                // Initialize current request counter
         this.state = State.READY;               // Process starts in ready state
-        this.isFull = false;
     }
 
     Process(int pID, String pName, ArrayList<Integer> pRequests) {
         this();
         this.processID = pID;           // set process ID
         this.processName = pName;       // set process name
-        initializePages(pRequests);     // creates pages in VM from given requests
-    }
-
-    private void initializePages(ArrayList<Integer> pRequests) {
-        for (int i : pRequests) {
-            Page temp = new Page(i);
-            this.pageRequests.add(temp);
-            if (!doesContainPage(pagesInVM, i)) {   // If page not in VM
-                pagesInVM.add(temp);                // add it to VM
-            }
-        }
+        this.pageRequests = pRequests;
     }
 
     public void run(int time) { // try to run the process TODO: make this return the state of the process
-        //for (Page p : pagesInMM) {
-        //    if (p.getPageID() == this.pageRequests.get(this.currentRequest).getPageID()) { // It should always be there
-        //        p.setLastAccessTime(time); // TODO: test this
-        //        p.setUseBit(1);
-        //    }
-        //}
-        for (int i = 0; i < mainMemory.length; i++) {
-            if (mainMemory[i] != null) {
-                if (mainMemory[i].getPageID() == this.pageRequests.get(this.currentRequest).getPageID()) {
-                    mainMemory[i].setLastAccessTime(time);
-                    mainMemory[i].setUseBit(1);
-                    break;
-                }
-            }
-        }
+
         this.currentRequest += 1;
     }
 
@@ -105,22 +63,12 @@ public class Process implements Cloneable {
         return this.pageRequests.size();
     }
 
-    public boolean isRequestInMM() { // is request in Main Memory
-        if (this.currentRequest < this.pageRequests.size()) { // prevent out of bounds
-            for (int i = 0; i < mainMemory.length; i++) {
-                if (mainMemory[i] != null) {
-                    if (mainMemory[i].getPageID() == this.pageRequests.get(this.currentRequest).getPageID()) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-        return false;
-    }
-
     public int getSwapInStartTime() {
         return this.swapInStartTime;
+    }
+
+    public void setSwapInStartTime(int t) {
+        this.swapInStartTime = t;
     }
 
     public int getSWAP_IN_TIME() {
@@ -132,102 +80,6 @@ public class Process implements Cloneable {
         this.state = State.BLOCKED;
     }
 
-    public int getNumOfPagesInMM() {
-        int pages = 0;
-        for (int i = 0; i < mainMemory.length; i++) {
-            if (mainMemory[i] != null) { // if there is a page here
-                pages++;
-            }
-        }
-        return pages;
-    }
-
-    public int getMaxFrames() {
-        return  this.maxFrames;
-    }
-
-    public void swapCurrentRequestToMM() {
-        int currentID = this.pageRequests.get(this.currentRequest).getPageID();     // get ID of current request
-        if (doesContainPage(this.pagesInVM, currentID)) {                           // if the page exists in virtual memory
-            for (Iterator<Page> i = pagesInVM.iterator(); i.hasNext();) {           // find page in VM
-                Page p = i.next();
-                if (p.getPageID() == currentID) {                                   // when find page, add it to MM
-                    addPageToMM(p);
-                    i.remove();                                                     // delete from VM
-                }
-            }
-        }
-    }
-
-    private void addPageToMM(Page p) {
-        for (int i = 0; i < mainMemory.length; i++) {
-            if (mainMemory[i] == null) {
-                mainMemory[i] = p;
-                break;
-            }
-        }
-    }
-
-    private boolean doesContainPage(ArrayList<Page> list, int pageNo) {
-        for (Page p : list) {
-            if (p.getPageID() == pageNo) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void removeLastUsedPageFromMM() {
-        int lastUsedPageTime = 10000; // TODO: bad dont like this
-        // Have to iterate over all before able to remove
-        for (Page p : pagesInMM) { // find the page last accessed
-            if (p.getLastAccessTime() < lastUsedPageTime) {
-                lastUsedPageTime = p.getLastAccessTime();
-            }
-        }
-        System.out.println(pagesInMM.size());
-        // find and remove it
-        for (Iterator<Page> i = pagesInMM.iterator(); i.hasNext();) {
-            Page p = i.next();
-            if (p.getLastAccessTime() == lastUsedPageTime) {
-                i.remove();
-                break;
-            }
-        }
-    }
-
-    private int clockPointer = 0;
-    public void clockRemovePage() {
-        //boolean removed = false;
-        ////this.pagesInMM.add(0, this.pagesInMM.remove(this.pagesInMM.size()-1));
-        //while(!removed) {
-        //    Page temp = this.pagesInMM.remove(0);
-        //    if (temp.getUseBit() == 1) {
-        //        temp.setUseBit(0);
-        //        this.pagesInMM.add(temp);
-        //    } else {
-        //        removed = true;
-        //    }
-        //}
-        boolean removed = false;
-
-        while(!removed) {
-            if (clockPointer == mainMemory.length) {
-                clockPointer = 0;
-            }
-            if (mainMemory[clockPointer] != null) {
-                if (mainMemory[clockPointer].getUseBit() == 1) {
-                    mainMemory[clockPointer].setUseBit(0);
-                } else { // bit is 0
-                    mainMemory[clockPointer] = null;
-                    removed = true;
-                    break;
-                }
-            }
-            clockPointer++;
-        }
-    }
-
 
     public int getProcessID() {
         return processID;
@@ -237,18 +89,16 @@ public class Process implements Cloneable {
         return processName;
     }
 
-    public void setMaxFrames(int maxFrames) {
-        this.maxFrames = maxFrames;
-        this.mainMemory = new Page[maxFrames];
-        Arrays.fill(mainMemory, null);
-    }
-
     public void setFinishTime(int finishTime) {
         this.finishTime = finishTime;
     }
 
     public int getCurrentRequest() {
         return currentRequest;
+    }
+
+    public int getCurrentPageID() {
+        return this.pageRequests.get(this.currentRequest);
     }
 
     public void setCurrentRequest(int r) {

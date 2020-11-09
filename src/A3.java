@@ -41,21 +41,20 @@ public class A3 {
         ArrayList<Process> processesLRU = generateProcessesFromFiles(args);
         ArrayList<Process> processesClock = generateProcessesFromFiles(args);
         int numOfProcesses = processesLRU.size();
-        setAllProcessMaxFrames(totalFrames/numOfProcesses , processesLRU);
-        setAllProcessMaxFrames(totalFrames/numOfProcesses , processesClock);
+        int maxFrames = totalFrames/numOfProcesses;
 
-        //LRUPolicy LRU = new LRUPolicy(timeQuantum);
-        //LRU.addProcesses(processesLRU);
-        //LRU.run();
+        LRUPolicy LRU = new LRUPolicy(timeQuantum, maxFrames);
+        LRU.addProcesses(processesLRU);
+        LRU.run();
 
-        ClockPolicy Clock = new ClockPolicy(timeQuantum);
-        Clock.addProcesses(processesClock);
-        Clock.run();
-        //
-        //System.out.println("LRU - Fixed:");
-        //generateStats(processesLRU);
-        System.out.println("Clock - Fixed:");
-        generateStats(processesClock);
+        //ClockPolicy Clock = new ClockPolicy(timeQuantum);
+        //Clock.addProcesses(processesClock);
+        //Clock.run();
+        ////
+        System.out.println("LRU - Fixed:");
+        generateStats(processesLRU);
+        //System.out.println("Clock - Fixed:");
+        //generateStats(processesClock);
 
     }
 
@@ -108,17 +107,6 @@ public class A3 {
         } catch (Exception e) {
             System.out.println(e);
             return null;
-        }
-    }
-
-    /**
-     * setAllProcessMaxFrames() method, sets the maxFrames member variable for all processes
-     * @param i the number of max frames
-     * @param processes an ArrayList of processes to set
-     */
-    private void setAllProcessMaxFrames(int i, ArrayList<Process> processes) {
-        for (Process p : processes) {
-            p.setMaxFrames(i);
         }
     }
 

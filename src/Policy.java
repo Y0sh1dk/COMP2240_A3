@@ -17,6 +17,8 @@ public abstract class Policy {
     protected ArrayList<Process> finishedProcesses;
     private int currentTime;
     protected int RRQuant;
+    protected int maxFramesPerProcess;
+    protected Page[][] mainMemory;
 
 
     /**
@@ -24,14 +26,17 @@ public abstract class Policy {
      * @param n name of the policy
      * @param RRQuant the time quantum used for the Round Robin scheduling algo
      */
-    Policy(String n, int RRQuant) {
+    Policy(String n, int RRQuant, int maxFrames) {
         this.readyProcesses = new ArrayList<>();
         this.blockedProcesses = new ArrayList<>();
         this.finishedProcesses = new ArrayList<>();
         this.name = n;
         this.RRQuant = RRQuant;
         this.currentTime = 0;
+        this.maxFramesPerProcess = maxFrames;
     }
+
+
 
     /**
      * getCurrentTime() method
