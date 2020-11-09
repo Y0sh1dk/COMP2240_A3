@@ -13,6 +13,14 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class Process implements Cloneable {
+    public boolean isFull() {
+        return isFull;
+    }
+
+    public void setFull(boolean full) {
+        isFull = full;
+    }
+
     enum State {
         BLOCKED,
         READY,
@@ -21,6 +29,7 @@ public class Process implements Cloneable {
 
     private final int MAX_PAGES = 50;
     private final int SWAP_IN_TIME = 6;     // Time it takes to swap in a page to MM from VM
+    private boolean isFull;
 
     private int processID;                  // ID of the process
     private int maxFrames;                  // Maximum number of frames allocated to the process
@@ -45,6 +54,7 @@ public class Process implements Cloneable {
         this.finishTime = 0;                    // Initialize finish time
         this.currentRequest = 0;                // Initialize current request counter
         this.state = State.READY;               // Process starts in ready state
+        this.isFull = false;
     }
 
     Process(int pID, String pName, ArrayList<Integer> pRequests) {
@@ -144,6 +154,7 @@ public class Process implements Cloneable {
                 lastUsedPageTime = p.getLastAccessTime();
             }
         }
+        System.out.println(pagesInMM.size());
         // find and remove it
         for (Iterator<Page> i = pagesInMM.iterator(); i.hasNext();) {
             Page p = i.next();
@@ -156,6 +167,7 @@ public class Process implements Cloneable {
 
     public void clockRemovePage() {
         boolean removed = false;
+        //this.pagesInMM.add(0, this.pagesInMM.remove(this.pagesInMM.size()-1));
         while(!removed) {
             Page temp = this.pagesInMM.remove(0);
             if (temp.getUseBit() == 1) {
@@ -165,6 +177,19 @@ public class Process implements Cloneable {
                 removed = true;
             }
         }
+        //boolean removed = false;
+        //Page pageToRemove = null;
+        //while (!removed) {
+        //    for (Page p : pagesInMM) {
+        //        if (p.getUseBit() == 0) {
+        //            pageToRemove = p;
+        //            removed = true;
+        //            break;
+        //        }
+        //        p.setUseBit(0);
+        //    }
+        //}
+        //this.pagesInMM.remove(pageToRemove);
     }
 
 
