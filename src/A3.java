@@ -21,7 +21,7 @@ public class A3 {
      */
     public static void main(String[] args) {
         if (args.length <= 3) { // If wrong amount of args given
-            System.out.println("Usage: A1 [file]"); // TODO: fix
+            System.out.println("Invalid Arguments, Example: A3 30 3 Process1.txt Process2.txt Process3.txt");
             return;
         }
         A3 main = new A3();
@@ -38,8 +38,8 @@ public class A3 {
         int totalFrames = Integer.parseInt(args[0]);
         int timeQuantum = Integer.parseInt(args[1]);
 
-        ArrayList<Process> processesLRU = generateProcessesFromFiles(args);
-        ArrayList<Process> processesClock = generateProcessesFromFiles(args);
+        ArrayList<Process> processesLRU = generateProcessesFromFiles(args);     // populate ArrayList with processes from input
+        ArrayList<Process> processesClock = generateProcessesFromFiles(args);   // populate ArrayList with processes from input
         int numOfProcesses = processesLRU.size();
         int maxFrames = totalFrames/numOfProcesses;
 
@@ -48,7 +48,7 @@ public class A3 {
 
         ClockPolicy Clock = new ClockPolicy(timeQuantum, maxFrames, processesClock);
         Clock.run();
-        //
+
         System.out.println("LRU - Fixed:");
         generateStats(processesLRU);
         System.out.println("Clock - Fixed:");
@@ -93,14 +93,14 @@ public class A3 {
         ArrayList<Integer> pageRequests = new ArrayList<>();
         try {
             Scanner inputStream = new Scanner(new File(s));
-            inputStream.nextLine(); // skip 'begin'
+            inputStream.nextLine();             // skip 'begin'
             while (inputStream.hasNextLine()) {
                 String line = inputStream.nextLine();
-                if (!line.equals("end")) {
+                if (!line.equals("end")) {      // while not at the end
                     pageRequests.add(Integer.parseInt(line));
                 }
             }
-            id = Integer.parseInt(s.split("\\.")[0].substring(s.length() - 5));
+            id = Integer.parseInt(s.split("\\.")[0].substring(s.length() - 5)); // ID of process from filename
             return new Process(id, s, pageRequests);
         } catch (Exception e) {
             System.out.println(e);
