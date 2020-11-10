@@ -8,13 +8,13 @@
  *  Extends Policy class and implements Clock strategy
  */
 
+import java.util.ArrayList;
 import java.util.Iterator;
 
 public class ClockPolicy extends Policy {
-    ClockPolicy(int RRQuant) {
-        super("ClockPolicy", RRQuant);
+    ClockPolicy(int RRQuant, int maxFrames, ArrayList<Process> processes) {
+        super("ClockPolicy", RRQuant, maxFrames, processes);
     }
-
 
     /**
      * run() method,
@@ -25,22 +25,25 @@ public class ClockPolicy extends Policy {
     @Override
     void run() {
         System.out.println("Initialising " + this.getName() + " Algorithm...");
+
+        this.initializeMemory();
+        this.initializeClockPointers();
+
         Process runningProcess = null;
         int processStartTime = 0;
         boolean quantFinished = false;
 
-        //updateStates();
         while (this.readyProcesses.size() + this.blockedProcesses.size() > 0) { // while not all processes have finished
             if (quantFinished) {
                 try {
-                    this.readyProcesses.add(this.readyProcesses.remove(0)); // move to end of ready
+                    this.readyProcesses.add(this.readyProcesses.remove(0)); // move process to end of ready queue
+
                 } catch (Exception e) {
 
                 }
                 quantFinished = false;
             }
-            this.updateReady();
-            this.updateBlocked();
+            this.updateStates(); // update the states of all processes
             if (this.readyProcesses.size() > 0) { // if processes are ready
                 if (!(runningProcess == readyProcesses.get(0))) { // if not same process as last time
                     processStartTime = getCurrentTime();
@@ -58,42 +61,86 @@ public class ClockPolicy extends Policy {
         }
     }
 
+    /**
+     * removePage() method
+     * Removes a page from memory using the clock page replacement policy
+     * @param processID the process you wish to remove a page from its memory
+     */
+    @Override
+    protected void removePage(int processID) {
+        boolean removed = false;
+        while(!removed) {
+            if (clockPointers[processID-1] == mainMemory[processID-1].length) {
+                clockPointers[processID-1] = 0;
+            }
+            if (mainMemory[processID-1][clockPointers[processID-1]].getUseBit() == 1) {
+                mainMemory[processID-1][clockPointers[processID-1]].setUseBit(0);
+            } else { // the use bit is equal to 0
+                mainMemory[processID-1][clockPointers[processID-1]] = null;
+                removed = true;
+            }
+            clockPointers[processID-1]++;
+        }
+    }
 
-    private void updateBlocked() {
-        for (Iterator<Process> i = blockedProcesses.iterator(); i.hasNext();) {
-            Process p = i.next();
-            if (!p.isRequestInMM()) {
-                if (p.getSwapInStartTime() + p.getSWAP_IN_TIME() <= this.getCurrentTime()) { // page ready to be swapped
-                    p.swapCurrentRequestToMM();  // swap the page in!
-                    p.setState(Process.State.READY);
-                    System.out.println(p.getProcessID() + ": READY (time=" + getCurrentTime() + ")");
-                    this.readyProcesses.add(p); // add process to ready queue
-                    i.remove(); // remove it from blocked queue
-                }
+    /**
+     * setPageUseBit() method, sets the use bit of the given pages
+     * @param processID process the page belongs too
+     * @param pageID the ID of the page
+     * @param useBit value to set useBit too
+     */
+    private void setPageUseBit(int processID, int pageID, int useBit) {
+        for (int i = 0; i < mainMemory[processID-1].length; i++) {
+            if (mainMemory[processID - 1][i].getPageID() == pageID) {
+                mainMemory[processID - 1][i].setUseBit(useBit);
+                break;
             }
         }
     }
 
-    private void updateReady() {
-        for (Iterator<Process> i = readyProcesses.iterator(); i.hasNext();) { // iterates through all ready processes
+    /**
+     * UpdateStates() method
+     * Loops through ready and blocked queues, updating the states of the processes based on weather a page has
+     * arrived in memory yet, or if a page if the current pages request is not located in memory
+     */
+    @Override
+    protected void updateStates() {
+        for (Iterator<Process> i = readyProcesses.iterator(); i.hasNext();) {
             Process p = i.next();
-            if (p.getCurrentRequest() >= p.numOfRequests()) { // if the process has finished
-                System.out.println(p.getProcessID() + ": FINISHED (time=" + getCurrentTime() + ")");
-                p.setState(Process.State.FINISHED); // set its state
-                p.setFinishTime(this.getCurrentTime()); // set its finish time
-                this.finishedProcesses.add(p); // add it too the finished queue
-                i.remove(); // remove from the ready queue
+            if (p.getCurrentRequest() >= p.numOfRequests()) {                   // if the process has finished
+                p.setState(Process.State.FINISHED);                             // set its state
+                p.setFinishTime(this.getCurrentTime());                         // set its finish time
+                this.finishedProcesses.add(p);                                  // add it too the finished queue
+                i.remove();                                                     // remove from the ready queue
+                continue;
             }
-            else if (!p.isRequestInMM()) {
-                System.out.println(p.getProcessID() + ": BLOCKED (time=" + getCurrentTime() + ")");
-                if (p.getNumOfPagesInMM() >= p.getMaxFrames()) { // If the process has run out of frames
-                    p.clockRemovePage(); // remove a page using the clock policy
+            if (this.isPageInMemory(p.getProcessID(),p.getCurrentPageID())) {   // page is in memory
+            } else { // page is not in memory
+                if (this.getNumOfPagesInMemory(p.getProcessID()) == maxFramesPerProcess) { // if Memory full
+                    this.removePage(p.getProcessID());
                 }
-                p.generateFault(this.getCurrentTime()); // generate a page fault
-                p.swapInPageToMM(this.getCurrentTime()); // swap page from VM to MM
-                p.setState(Process.State.BLOCKED); // set state
-                this.blockedProcesses.add(p); // add process to blocked queue
-                i.remove(); // remove from ready queue
+                p.generateFault(this.getCurrentTime());
+                p.setState(Process.State.BLOCKED);                              // set state
+                p.setSwapInStartTime(this.getCurrentTime());                    // set the time the swap started
+                this.blockedProcesses.add(p);                                   // add process to blocked queue
+                i.remove();                                                     // remove from ready queue
+            }
+        }
+
+        for (Iterator<Process> i = blockedProcesses.iterator(); i.hasNext();) {
+            Process p = i.next();
+            if (p.getCurrentRequest() >= p.numOfRequests()) {                       // if the process has finished
+                p.setState(Process.State.FINISHED);                                 // set its state
+                p.setFinishTime(this.getCurrentTime());                             // set its finish time
+                this.finishedProcesses.add(p);                                      // add it too the finished queue
+                i.remove();                                                         // remove from the ready queue
+            } else if (!isPageInMemory(p.getProcessID(), p.getCurrentPageID())) {   // page not in memory
+                if (p.getSwapInStartTime() + p.getSWAP_IN_TIME() <= this.getCurrentTime()) {
+                    p.setState(Process.State.READY);
+                    addPage(p.getProcessID(), p.getCurrentPageID());
+                    this.readyProcesses.add(p);                                     // add process to ready queue
+                    i.remove();                                                     // remove it from blocked queue
+                }
             }
         }
     }
