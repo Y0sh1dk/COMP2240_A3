@@ -9,6 +9,7 @@
  */
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public abstract class Policy {
     private String name;
@@ -19,6 +20,8 @@ public abstract class Policy {
     protected int RRQuant;
     protected int maxFramesPerProcess;
     protected Page[][] mainMemory;
+    protected int[] clockPointers;
+
 
 
     /**
@@ -142,6 +145,11 @@ public abstract class Policy {
 
     protected void initializeMemory() {
         this.mainMemory = new Page[this.readyProcesses.size()][this.maxFramesPerProcess];
+    }
+
+    protected void initializeClockPointers() {
+        this.clockPointers = new int[this.readyProcesses.size()];
+        Arrays.fill(this.clockPointers, 0);
     }
 
 }

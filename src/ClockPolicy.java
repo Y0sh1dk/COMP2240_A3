@@ -9,6 +9,7 @@
  */
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 
 public class ClockPolicy extends Policy {
@@ -26,7 +27,10 @@ public class ClockPolicy extends Policy {
     @Override
     void run() {
         System.out.println("Initialising " + this.getName() + " Algorithm...");
+
         this.initializeMemory();
+        this.initializeClockPointers();
+
         Process runningProcess = null;
         int processStartTime = 0;
         boolean quantFinished = false;
@@ -47,7 +51,6 @@ public class ClockPolicy extends Policy {
                     processStartTime = getCurrentTime();
                 }
                 runningProcess = readyProcesses.get(0); // get the process of the top
-                setPageAccessTime(runningProcess.getProcessID(), runningProcess.getCurrentPageID(), this.getCurrentTime());
                 runningProcess.run(this.getCurrentTime());
 
 
@@ -64,17 +67,28 @@ public class ClockPolicy extends Policy {
 
     @Override
     protected void removePage(int processID) {
-        int lastUsed = 100000;
-        int lastUsedIndex = 0;
+        boolean removed = false;
+        while(!removed) {
+            if (clockPointers[processID-1] == mainMemory[processID-1].length) {
+                clockPointers[processID-1] = 0;
+            }
+            if (mainMemory[processID-1][clockPointers[processID-1]].getUseBit() == 1) {
+                mainMemory[processID-1][clockPointers[processID-1]].setUseBit(0);
+            } else { // the use bit is equal to 0
+                mainMemory[processID-1][clockPointers[processID-1]] = null;
+                removed = true;
+            }
+            clockPointers[processID-1]++;
+        }
+    }
+
+    private void setPageUseBit(int processID, int pageID, int useBit) {
         for (int i = 0; i < mainMemory[processID-1].length; i++) {
-            if (mainMemory[processID-1][i] != null) {
-                if (mainMemory[processID-1][i].getLastAccessTime() < lastUsed) {
-                    lastUsed = mainMemory[processID-1][i].getLastAccessTime();
-                    lastUsedIndex = i;
-                }
+            if (mainMemory[processID - 1][i].getPageID() == pageID) {
+                mainMemory[processID - 1][i].setUseBit(useBit);
+                break;
             }
         }
-        mainMemory[processID-1][lastUsedIndex] = null; // remove the page
     }
 
     private void updateStates() {
@@ -89,7 +103,7 @@ public class ClockPolicy extends Policy {
                 continue;
             }
             if (this.isPageInMemory(p.getProcessID(),p.getCurrentPageID())) { // page is in memory
-                // Do nothing?
+                //setPageUseBit(p.getProcessID(), p.getCurrentPageID(), 1);
             } else { // page is not in memory
                 System.out.println(p.getProcessID() + ": BLOCKED (time=" + getCurrentTime() + ")");
                 if (this.getNumOfPagesInMemory(p.getProcessID()) == maxFramesPerProcess) {
