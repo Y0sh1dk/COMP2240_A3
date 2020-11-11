@@ -11,6 +11,8 @@
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class A3 {
 
@@ -89,10 +91,11 @@ public class A3 {
      * @return an instance of Process
      */
     private Process generateProcess(String s) {
-        int id;
+        int id = 0;
+        Path filePath = Paths.get(s);
         ArrayList<Integer> pageRequests = new ArrayList<>();
         try {
-            Scanner inputStream = new Scanner(new File(s));
+            Scanner inputStream = new Scanner(new File(String.valueOf(filePath.toAbsolutePath())));
             inputStream.nextLine();             // skip 'begin'
             while (inputStream.hasNextLine()) {
                 String line = inputStream.nextLine();
@@ -100,8 +103,10 @@ public class A3 {
                     pageRequests.add(Integer.parseInt(line));
                 }
             }
-            id = Integer.parseInt(s.split("\\.")[0].substring(s.length() - 5)); // ID of process from filename
-            return new Process(id, s, pageRequests);
+            String fileName = (String.valueOf(filePath.getFileName())).split("\\.")[0];
+            id = Integer.parseInt(fileName.substring(fileName.length()-1));
+            Process p =  new Process(id, String.valueOf(filePath.getFileName()), pageRequests);
+            return p;
         } catch (Exception e) {
             System.out.println(e);
             return null;
