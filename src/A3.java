@@ -103,8 +103,8 @@ public class A3 {
                     pageRequests.add(Integer.parseInt(line));
                 }
             }
-            String fileName = (String.valueOf(filePath.getFileName())).split("\\.")[0];
-            id = Integer.parseInt(fileName.substring(fileName.length()-1));
+            String fileName = (String.valueOf(filePath.getFileName())).split("\\.")[0];   // get file name from path
+            id = Integer.parseInt(fileName.substring(fileName.length()-1));                     // get id from filename
             Process p =  new Process(id, String.valueOf(filePath.getFileName()), pageRequests);
             return p;
         } catch (Exception e) {
