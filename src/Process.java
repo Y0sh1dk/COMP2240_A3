@@ -33,6 +33,10 @@ public class Process implements Cloneable {
     private int swapInStartTime;            // start time of the last occurred swap
     private State state;                    // current state of the process
 
+    /**
+     * Process class base constructor
+     * Initializes arrays and initial values
+     */
     Process() {
         this.pageRequests = new ArrayList<>();  // Initialize arrayList
         this.faults = new ArrayList<>();        // Initialize arrayList
@@ -43,6 +47,12 @@ public class Process implements Cloneable {
         this.state = State.READY;               // Process starts in ready state
     }
 
+    /**
+     * Process class constructor
+     * @param pID the ID of the process
+     * @param pName the name of the process
+     * @param pRequests ArrayList containing the page requests of the process
+     */
     Process(int pID, String pName, ArrayList<Integer> pRequests) {
         this();
         this.processID = pID;           // set process ID
@@ -50,79 +60,134 @@ public class Process implements Cloneable {
         this.pageRequests = pRequests;
     }
 
+    /**
+     * run() method
+     * 'Runs' the current page loaded into Memory
+     * @param time the current time of the simulation
+     */
     public void run(int time) { // try to run the process TODO: make this return the state of the process
 
         this.currentRequest += 1;
     }
 
+    /**
+     * setState() method, sets the current state of the process
+     * @param s the state to set
+     */
     public void setState(Process.State s) {
         this.state = s;
     }
 
+    /**
+     * numOfRequests() method
+     * @return an into containing the number of page requests
+     */
     public int numOfRequests() {
         return this.pageRequests.size();
     }
 
+    /**
+     * getSwapInStartTime() method
+     * @return an int containing the time the last swap in started
+     */
     public int getSwapInStartTime() {
         return this.swapInStartTime;
     }
 
+    /**
+     * setSwapInStartTime() method
+     * @param t int representing the time to set as the swap in start time
+     */
     public void setSwapInStartTime(int t) {
         this.swapInStartTime = t;
     }
 
+    /**
+     * getSWAP_IN_TIME() method
+     * @return int containing the const time it takes to swap in a page
+     */
     public int getSWAP_IN_TIME() {
         return this.SWAP_IN_TIME;
     }
 
-    public void swapInPageToMM(int currentTime) {
-        this.swapInStartTime = currentTime;
-        this.state = State.BLOCKED;
-    }
-
-
+    /**
+     * getProcessID() method
+     * @return an int containing the ID of the process
+     */
     public int getProcessID() {
         return processID;
     }
 
+    /**
+     * getProcessName() method
+     * @return a String containing the name of the process
+     */
     public String getProcessName() {
         return processName;
     }
 
+    /**
+     * setFinishTime() method
+     * @param finishTime time to set as finish time of the process
+     */
     public void setFinishTime(int finishTime) {
         this.finishTime = finishTime;
     }
 
+    /**
+     * getCurrentRequest() method
+     * @return an int containing the index of the current request
+     */
     public int getCurrentRequest() {
         return currentRequest;
     }
 
+    /**
+     * getCurrentPageID() method
+     * @return an int containing the ID of the current page request
+     */
     public int getCurrentPageID() {
         return this.pageRequests.get(this.currentRequest);
     }
 
-    public void setCurrentRequest(int r) {
-        this.currentRequest = r;
-    }
-
-
+    /**
+     * generateFault() method
+     * @param time the time that the fault occurred
+     */
     public void generateFault(int time) {
         this.faults.add(time);
     }
 
+    /**
+     * getState() method
+     * @return the current state of the process
+     */
     public State getState() {
         return this.state;
     }
 
-
+    /**
+     * getTurnAroundTime() method
+     * @return an int containing the turn around time of the process,
+     * calculated from the finish and arrive time.
+     */
     public int getTurnAroundTime() {
         return this.finishTime - this.arriveTime;
     }
 
+    /**
+     * getNumOfFaults() method
+     * @return an int containing the number of page faults that
+     * have occured
+     */
     public int getNumOfFaults() {
         return this.faults.size();
     }
 
+    /**
+     * getFaultString() method
+     * @return a String containing the times of all the faults that ha
+     */
     public String getFaultString() {
         String s = "{";
         for (int i : faults) {

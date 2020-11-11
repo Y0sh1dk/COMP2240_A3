@@ -76,9 +76,7 @@ public abstract class Policy {
      * @param processes an ArrayList of processes to add to the algo
      */
     private void addProcesses(ArrayList<Process> processes) {
-        for (Process p : processes) {
-            readyProcesses.add(p);
-        }
+        readyProcesses.addAll(processes); // add all given process to ready queue
     }
 
     /**
@@ -104,12 +102,12 @@ public abstract class Policy {
      * @return boolean, true if page is in Memory, false if not in Memory
      */
     protected boolean isPageInMemory(int processID, int pageID) {
-        if (mainMemory[processID-1] == null) {
+        if (mainMemory[processID-1] == null) {                          // if the array is empty
             return false;
         }
         for (int i = 0; i < mainMemory[processID-1].length; i++) {
-            if (mainMemory[processID-1][i] != null) {
-                if (mainMemory[processID-1][i].getPageID() == pageID) {
+            if (mainMemory[processID-1][i] != null) {                   // if there is a page there
+                if (mainMemory[processID-1][i].getPageID() == pageID) { // if the ID of the page is same as given
                     return true;
                 }
             }
@@ -123,12 +121,12 @@ public abstract class Policy {
      * @return int containing the number of pages
      */
     protected int getNumOfPagesInMemory(int processID) {
-        if (mainMemory[processID-1] == null) {
+        if (mainMemory[processID-1] == null) { // if the array is empty
             return 0;
         }
         int pages = 0;
         for (int i = 0; i < mainMemory[processID-1].length; i++) {
-            if (mainMemory[processID-1][i] != null) {
+            if (mainMemory[processID-1][i] != null) { // if there is a page there
                 pages++;
             }
         }
@@ -138,16 +136,16 @@ public abstract class Policy {
     /**
      * addPage() method
      * @param processID The Process that you want to add the page too
-     * @param pageID the ID of the page you want t oadd
+     * @param pageID the ID of the page you want to add
      */
     protected void addPage(int processID, int pageID) {
-        if(mainMemory[processID-1] == null) {
-            mainMemory[processID-1][0] = new Page(pageID);
+        if(mainMemory[processID-1] == null) { // if the array is empty
+            mainMemory[processID-1][0] = new Page(pageID); // add the page there
             return;
         }
         for (int i = 0; i < mainMemory[processID-1].length; i++) {
-            if (mainMemory[processID-1][i] == null) {
-                mainMemory[processID-1][i] = new Page(pageID);
+            if (mainMemory[processID-1][i] == null) { // if there is no page there
+                mainMemory[processID-1][i] = new Page(pageID); // add the page there
                 break;
             }
         }
@@ -161,9 +159,9 @@ public abstract class Policy {
      */
     protected void setPageAccessTime(int processID, int pageID, int time) {
         for (int i = 0; i < mainMemory[processID-1].length; i++) {
-            if (mainMemory[processID-1][i] != null) {
-                if (mainMemory[processID-1][i].getPageID() == pageID) {
-                    mainMemory[processID-1][i].setLastAccessTime(time);
+            if (mainMemory[processID-1][i] != null) { // if there is a page in memory
+                if (mainMemory[processID - 1][i].getPageID() == pageID) { // find the page
+                    mainMemory[processID - 1][i].setLastAccessTime(time); // set its access time
                     break;
                 }
             }
@@ -182,7 +180,7 @@ public abstract class Policy {
      */
     protected void initializeClockPointers() {
         this.clockPointers = new int[this.readyProcesses.size()];
-        Arrays.fill(this.clockPointers, 0);
+        Arrays.fill(this.clockPointers, 0); // fill the array with 0's
     }
 
 }
